@@ -44,8 +44,10 @@ elif app_mode == "myaitools (Análise Orçamentos)":
             st.dataframe(df.head())
 
             if st.button("🚀 Processar com AI"):
-                with st.spinner("A analisar com os modelos de Sonnet da sua conta..."):
+                with st.spinner("A analisar com Claude 4.5 Sonnet..."):
                     res_df = df.copy()
+
+                    # Calculations
                     res_df['PREÇO PRODUTO (mercado s/IVA)'] = res_df['V. UNIT.'] * 1.1
                     res_df['V. PARCIAL (mercado)'] = res_df['PREÇO PRODUTO (mercado s/IVA)'] * res_df['QUANT.']
                     res_df['PREÇO COMPETITIVO (prod + M/O simult.)'] = res_df['PREÇO PRODUTO (mercado s/IVA)'] * 0.95
@@ -57,9 +59,9 @@ elif app_mode == "myaitools (Análise Orçamentos)":
                     budget_str = res_df.to_string()
                     prompt = f"Analyze this budget for the Algarve, Portugal. Use sections: CONTEXTO (mobilization 0€), MATERIAIS, PLANTAS (FlorAccess), EXCEÇÕES, ESCALA and SÍNTESE FINANCEIRA. Budget:\n{budget_str}"
 
-                    # --- USING YOUR SPECIFIC MODEL NAMES ---
-                    # Added the ones you mentioned and a few common variations just in case
-                    models_to_try = ["claude-sonnet-5", "claude-sonnet-4-6", "claude-3-5-sonnet-20241022"]
+                    # --- USING YOUR EXACT 4.5 MODEL IDs ---
+                    # We prioritize Sonnet 4.5, then Opus 4.5, then Haiku 4.5
+                    models_to_try = ["claude-sonnet-4-5-20250929", "claude-opus-4-5-20251001", "claude-haiku-4-5-20251001"]
                     analysis_text = ""
                     used_model = ""
 
@@ -76,11 +78,11 @@ elif app_mode == "myaitools (Análise Orçamentos)":
 
                             used_model = model_name
                             break
-                        except Exception as e:
+                        except Exception:
                             continue
 
                     if not analysis_text:
-                        st.error(f"❌ Erro: Nenhum dos modelos ({models_to_try}) foi aceito pela sua chave API. Verifique os nomes exatos dos modelos no seu dashboard da Anthropic.")
+                        st.error("❌ Erro: Nenhum dos modelos 4.5 foi aceito. Verifique a sua chave API.")
                         st.stop()
 
                     # --- EXPORT TO EXCEL ---
