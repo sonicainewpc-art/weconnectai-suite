@@ -44,7 +44,7 @@ elif app_mode == "myaitools (Análise Orçamentos)":
             st.dataframe(df.head())
 
             if st.button("🚀 Processar com AI"):
-                with st.spinner("A analisar... O sistema está a selecionar o melhor modelo disponível."):
+                with st.spinner("A analisar com os modelos de Sonnet da sua conta..."):
                     res_df = df.copy()
                     res_df['PREÇO PRODUTO (mercado s/IVA)'] = res_df['V. UNIT.'] * 1.1
                     res_df['V. PARCIAL (mercado)'] = res_df['PREÇO PRODUTO (mercado s/IVA)'] * res_df['QUANT.']
@@ -57,9 +57,9 @@ elif app_mode == "myaitools (Análise Orçamentos)":
                     budget_str = res_df.to_string()
                     prompt = f"Analyze this budget for the Algarve, Portugal. Use sections: CONTEXTO (mobilization 0€), MATERIAIS, PLANTAS (FlorAccess), EXCEÇÕES, ESCALA and SÍNTESE FINANCEIRA. Budget:\n{budget_str}"
 
-                    # --- SMART MODEL SELECTION ---
-                    # We try these in order: Newest Sonnet -> Older Sonnet -> Haiku (Guaranteed)
-                    models_to_try = ["claude-3-5-sonnet-20241022", "claude-3-5-sonnet-20240620", "claude-3-haiku-20240307"]
+                    # --- USING YOUR SPECIFIC MODEL NAMES ---
+                    # Added the ones you mentioned and a few common variations just in case
+                    models_to_try = ["claude-sonnet-5", "claude-sonnet-4-6", "claude-3-5-sonnet-20241022"]
                     analysis_text = ""
                     used_model = ""
 
@@ -70,18 +70,17 @@ elif app_mode == "myaitools (Análise Orçamentos)":
                                 max_tokens=4000,
                                 messages=[{"role": "user", "content": prompt}]
                             )
-                            # Brute force extract text from blocks
                             for block in message.content:
                                 try: analysis_text += block.text
                                 except AttributeError: continue
 
                             used_model = model_name
-                            break # Stop trying other models if this one works!
-                        except Exception:
-                            continue # Try the next model in the list
+                            break
+                        except Exception as e:
+                            continue
 
                     if not analysis_text:
-                        st.error("❌ Todos os modelos falharam. Verifique o saldo de créditos da sua API Anthropic.")
+                        st.error(f"❌ Erro: Nenhum dos modelos ({models_to_try}) foi aceito pela sua chave API. Verifique os nomes exatos dos modelos no seu dashboard da Anthropic.")
                         st.stop()
 
                     # --- EXPORT TO EXCEL ---
@@ -91,7 +90,7 @@ elif app_mode == "myaitools (Análise Orçamentos)":
                         analysis_df = pd.DataFrame({'Relatorio de Auditoria': [analysis_text]})
                         analysis_df.to_excel(writer, sheet_name='Analise Critica', index=False)
 
-                    st.success(f"✅ Análise concluída com sucesso usando o modelo: {used_model}")
+                    st.success(f"✅ Análise concluída com sucesso usando: {used_model}")
 
                     st.download_button(
                         label="📥 Download Result Analysis (Excel)",
